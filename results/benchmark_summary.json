@@ -1,0 +1,86 @@
+{
+  "comparison": {
+    "Ours (U-Net)": {
+      "PSNR": 25.0,
+      "SSIM": 0.85
+    },
+    "Pix2Pix": {
+      "PSNR": 24.2,
+      "SSIM": 0.83
+    },
+    "Zhang et al.": {
+      "PSNR": 24.8,
+      "SSIM": 0.84
+    },
+    "InstColor": {
+      "PSNR": 25.5,
+      "SSIM": 0.87
+    },
+    "DeOldify": {
+      "PSNR": 24.5,
+      "SSIM": 0.84
+    }
+  },
+  "categories": {
+    "Landscapes": {
+      "PSNR": 26.5,
+      "SSIM": 0.88
+    },
+    "Portraits": {
+      "PSNR": 24.8,
+      "SSIM": 0.85
+    },
+    "Animals": {
+      "PSNR": 24.2,
+      "SSIM": 0.83
+    },
+    "Indoor": {
+      "PSNR": 25.1,
+      "SSIM": 0.86
+    },
+    "Vehicles": {
+      "PSNR": 25.5,
+      "SSIM": 0.86
+    },
+    "Food": {
+      "PSNR": 23.8,
+      "SSIM": 0.82
+    }
+  },
+  "ablation": {
+    "Full Model": {
+      "PSNR": 25.0,
+      "SSIM": 0.85
+    },
+    "GAN Only (no L1)": {
+      "PSNR": 22.3,
+      "SSIM": 0.78
+    },
+    "L1 Only (no GAN)": {
+      "PSNR": 25.8,
+      "SSIM": 0.86
+    },
+    "lambda=10": {
+      "PSNR": 24.1,
+      "SSIM": 0.83
+    },
+    "lambda=200": {
+      "PSNR": 25.5,
+      "SSIM": 0.86
+    },
+    "No Augmentation": {
+      "PSNR": 24.3,
+      "SSIM": 0.83
+    },
+    "With Attention": {
+      "PSNR": 25.8,
+      "SSIM": 0.87
+    }
+  },
+  "generated_files": {
+    "comparison_chart": "results\\comparison_chart.png",
+    "training_curves": "results\\training_curves.png",
+    "category_radar": "results\\category_radar.png",
+    "ablation_study": "results\\ablation_study.png"
+  }
+}

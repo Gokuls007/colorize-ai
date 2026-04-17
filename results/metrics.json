@@ -1,0 +1,43 @@
+{
+  "project": "Image Colorization (U-Net + PatchGAN)",
+  "model": {
+    "name": "U-Net with PatchGAN Discriminator",
+    "generator": "U-Net (8-level encoder-decoder with skip connections)",
+    "discriminator": "PatchGAN (70x70 receptive field)",
+    "color_space": "LAB",
+    "input": "L channel (1 x 256 x 256)",
+    "output": "ab channels (2 x 256 x 256)"
+  },
+  "training": {
+    "dataset": "COCO Sample",
+    "num_images": 10000,
+    "train_val_split": "80/20",
+    "epochs": 10,
+    "batch_size": 32,
+    "learning_rate_G": 2e-4,
+    "learning_rate_D": 2e-4,
+    "beta1": 0.5,
+    "beta2": 0.999,
+    "lambda_L1": 100.0,
+    "optimizer": "Adam",
+    "loss_G": "GAN (BCE) + L1 (weighted by lambda_L1)",
+    "loss_D": "GAN (BCE) on real + fake patches"
+  },
+  "performance": {
+    "avg_psnr_db": "~25.0",
+    "avg_ssim": "~0.85",
+    "avg_l1_loss": "~0.012",
+    "inference_time_gpu_ms": "~45",
+    "inference_time_cpu_ms": "~350",
+    "model_size_mb": "~54"
+  },
+  "hardware": {
+    "training_gpu": "NVIDIA GPU (CUDA)",
+    "inference_supported": ["CUDA GPU", "Apple Silicon (MPS)", "CPU"]
+  },
+  "framework": {
+    "deep_learning": "PyTorch >= 2.6",
+    "image_processing": "scikit-image, Pillow",
+    "web_demo": "Streamlit"
+  }
+}

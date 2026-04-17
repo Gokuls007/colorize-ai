@@ -1,0 +1,41 @@
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+env/
+build/
+develop-eggs/
+dist/
+downloads/
+eggs/
+.eggs/
+lib/
+lib64/
+parts/
+sdist/
+var/
+wheels/
+*.egg-info/
+.installed.cfg
+*.egg
+
+# Jupyter Notebook
+.ipynb_checkpoints
+*/.ipynb_checkpoints/*
+
+# Project Specific
+temp_input.jpg
+visual_debug.py
+download_model.py
+generate_gallery.py
+colorization_v2.pth
+test_checkpoint.pth
+
+# Streamlit
+.streamlit/
+
+# OS
+.DS_Store
+Thumbs.db

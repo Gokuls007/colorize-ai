@@ -1,0 +1,32 @@
+__pycache__
+*.pyc
+*.pyo
+.git
+.gitignore
+.env
+.venv
+venv/
+.pytest_cache
+.DS_Store
+*.egg-info
+dist/
+build/
+*.ipynb
+*.ipynb_checkpoints
+.vscode
+.idea
+uv.lock
+.python-version
+
+# Large files
+*.pth
+!checkpoint.pth
+
+# Temporary files
+*.tmp
+*.bak
+*.swp
+
+# OS files
+Thumbs.db
+Desktop.ini
