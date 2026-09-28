@@ -1,9 +1,16 @@
 import streamlit as st
 import torch
-from PIL import Image
-import numpy as np
+from PIL import Image, ImageOps
 import os
-from image_colorizer.inference import colorize_image
+import datetime
+from image_colorizer.inference import _is_lfs_pointer, _load_model, colorize_image
+
+
+@st.cache_resource(show_spinner=False)
+def load_model(path, device, mtime):
+    # mtime is part of the cache key so a retrained checkpoint gets reloaded
+    return _load_model(path, device)
+
 
 st.set_page_config(page_title="Image Colorizer AI", layout="wide")
 
@@ -32,11 +39,12 @@ device = "cuda" if torch.cuda.is_available() else "cpu"
 saturation = st.sidebar.slider("Saturation Boost", 0.5, 2.0, 1.0)
 sharpen = st.sidebar.slider("Sharpening", 0.1, 2.0, 0.8)
 
-import os
-import datetime
 st.sidebar.markdown("---")
 st.sidebar.header("📊 Live Model Status")
-if os.path.exists(model_path):
+if os.path.exists(model_path) and _is_lfs_pointer(model_path):
+    st.sidebar.error("The checkpoint is a Git LFS pointer, not the real weights. "
+                     "Run `git lfs pull` to download it.")
+elif os.path.exists(model_path):
     mtime = os.path.getmtime(model_path)
     last_updated = datetime.datetime.fromtimestamp(mtime).strftime('%Y-%m-%d %H:%M:%S')
     st.sidebar.info(f"**Last Trained:** {last_updated}")
@@ -49,35 +57,38 @@ else:
 uploaded_file = st.sidebar.file_uploader("Choose an image...", type=["jpg", "png", "jpeg"])
 
 if uploaded_file is not None:
-    image = Image.open(uploaded_file)
-    
+    # Respect EXIF rotation and normalise PNG/RGBA/palette uploads to RGB
+    image = ImageOps.exif_transpose(Image.open(uploaded_file)).convert("RGB")
+
     col1, col2 = st.columns(2)
-    
+
     with col1:
         st.header("Original")
-        st.image(image, use_container_width=True)
-        
+        st.image(image, width="stretch")
+
     if st.sidebar.button("Colorize"):
         if not os.path.exists(model_path):
             st.error(f"Model not found at {model_path}. Please check the path.")
         else:
             with st.spinner("Colorizing..."):
-                # Save temp
-                temp_input = "temp_input.jpg"
-                image.save(temp_input)
-                
-                result = colorize_image(
-                    temp_input, 
-                    model_path, 
-                    device=device,
-                    saturation_factor=saturation,
-                    sharpen_factor=sharpen
-                )
-                
+                try:
+                    model = load_model(model_path, device, os.path.getmtime(model_path))
+                    result = colorize_image(
+                        image,
+                        model_path,
+                        device=device,
+                        saturation_factor=saturation,
+                        sharpen_factor=sharpen,
+                        model=model,
+                    )
+                except Exception as e:
+                    st.error(f"Could not colorize the image: {e}")
+                    st.stop()
+
                 with col2:
                     st.header("Colorized")
-                    st.image(result, use_container_width=True)
-                    
+                    st.image(result, width="stretch")
+
                     # Download button
                     # (Simplified for now)
                     st.success("Colorization Complete!")

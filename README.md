@@ -56,12 +56,18 @@ Unlike RGB, the **LAB color space** separates Lightness (L) from chromaticity (A
 
 ```bash
 # 1. Clone the repository
-git clone https://github.com/yourusername/ImageColorization.git
-cd ImageColorization
+git clone https://github.com/Gokuls007/colorize-ai.git
+cd colorize-ai
 
-# 2. Install core dependencies
+# 2. Download the trained weights (model_checkpoint.pth is stored with Git LFS)
+git lfs install
+git lfs pull
+
+# 3. Install core dependencies
 pip install -r requirements.txt
 ```
+
+> If `model_checkpoint.pth` is only a few hundred bytes, it is a Git LFS pointer rather than the real weights. Run `git lfs pull` to fetch the ~230 MB checkpoint.
 
 ### Usage
 

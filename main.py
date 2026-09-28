@@ -48,8 +48,8 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument(
         "--model", "-m",
         type=str,
-        required=True,
-        help="Path to trained model checkpoint (.pth file).",
+        default="model_checkpoint.pth",
+        help="Path to trained model checkpoint (.pth file, default: model_checkpoint.pth).",
     )
     parser.add_argument(
         "--output", "-o",
@@ -239,6 +239,7 @@ def _run_evaluation(args: argparse.Namespace) -> None:
     from image_colorizer.dataset import ColorizationDataLoader
     from image_colorizer.checkpoint import load_model_only
     from image_colorizer.model import MainModel
+    from image_colorizer.inference import _resolve_device
 
     if not os.path.exists(args.model):
         print(f"Error: Model checkpoint not found: {args.model}", file=sys.stderr)
@@ -251,9 +252,10 @@ def _run_evaluation(args: argparse.Namespace) -> None:
     print(f"{'='*40}\n")
 
     try:
-        # Load model
+        # Load model (fall back to CPU if the requested device is unavailable)
+        device = _resolve_device(args.device)
         model = MainModel()
-        model = load_model_only(args.model, model, args.device)
+        model = load_model_only(args.model, model, device)
 
         # Load validation data
         print("Loading validation dataset...")
@@ -262,7 +264,7 @@ def _run_evaluation(args: argparse.Namespace) -> None:
 
         # Evaluate
         print("Running evaluation...")
-        metrics = evaluate_model(model, val_dl, args.device)
+        metrics = evaluate_model(model, val_dl, device.type)
         print_metrics(metrics)
 
     except Exception as e:

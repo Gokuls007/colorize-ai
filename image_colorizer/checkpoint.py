@@ -14,7 +14,8 @@ def save_checkpoint(model, epoch, path, optimizer_G=None, optimizer_D=None, metr
 def load_checkpoint(path, model, optimizer_G=None, optimizer_D=None):
     if not os.path.exists(path):
         raise FileNotFoundError(f"No checkpoint found at {path}")
-    checkpoint = torch.load(path)
+    # Map onto the model's device so GPU-saved checkpoints also load on CPU
+    checkpoint = torch.load(path, map_location=next(model.parameters()).device)
     model.load_state_dict(checkpoint['model_state'])
     if optimizer_G and 'optim_G_state' in checkpoint:
         optimizer_G.load_state_dict(checkpoint['optim_G_state'])

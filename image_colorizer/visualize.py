@@ -1,5 +1,6 @@
 import matplotlib.pyplot as plt
 import numpy as np
+import torch
 from skimage.color import lab2rgb
 
 def visualize(model, data, save_path=None):

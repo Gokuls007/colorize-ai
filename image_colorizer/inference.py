@@ -13,6 +13,7 @@ from typing import Optional, Tuple, Union
 
 import numpy as np
 import torch
+import torch.nn.functional as F
 from PIL import Image, ImageEnhance
 from skimage.color import lab2rgb, rgb2lab
 from torchvision import transforms
@@ -21,11 +22,33 @@ from tqdm import tqdm
 from image_colorizer.model import MainModel
 
 
+def _resolve_device(device: str = "cuda") -> torch.device:
+    """Return the requested device if it is available, otherwise fall back to CPU."""
+    if device == "cuda" and torch.cuda.is_available():
+        return torch.device("cuda")
+    if device == "mps" and getattr(torch.backends, "mps", None) is not None and torch.backends.mps.is_available():
+        return torch.device("mps")
+    return torch.device("cpu")
+
+
+def _is_lfs_pointer(path: str) -> bool:
+    """True if the file is a Git LFS pointer instead of the real weights."""
+    if os.path.getsize(path) > 1024:
+        return False
+    with open(path, "rb") as f:
+        return f.read(64).startswith(b"version https://git-lfs")
+
+
 def _load_model(model_path: str, device: str = "cuda") -> MainModel:
     if not os.path.exists(model_path):
         raise FileNotFoundError(f"Model checkpoint not found: {model_path}")
+    if _is_lfs_pointer(model_path):
+        raise RuntimeError(
+            f"'{model_path}' is a Git LFS pointer, not the model weights. "
+            "Install Git LFS and run 'git lfs pull' to download the checkpoint."
+        )
 
-    device = torch.device(device if torch.cuda.is_available() or device == "cpu" else "cpu")
+    device = _resolve_device(device)
     model = MainModel()
     model = model.to(device)
 
@@ -42,11 +65,17 @@ def _load_model(model_path: str, device: str = "cuda") -> MainModel:
     return model
 
 
-def _preprocess_image(image_path: str, size: int = 256) -> Tuple[torch.Tensor, np.ndarray]:
-    if not os.path.exists(image_path):
-        raise FileNotFoundError(f"Image not found: {image_path}")
+def _open_image(image: Union[str, Image.Image]) -> Image.Image:
+    """Open an image path (or accept a PIL image) and return it as RGB."""
+    if isinstance(image, Image.Image):
+        return image.convert("RGB")
+    if not os.path.exists(image):
+        raise FileNotFoundError(f"Image not found: {image}")
+    return Image.open(image).convert("RGB")
 
-    img = Image.open(image_path).convert("RGB")
+
+def _preprocess_image(image_path: Union[str, Image.Image], size: int = 256) -> Tuple[torch.Tensor, np.ndarray]:
+    img = _open_image(image_path)
     transform = transforms.Compose([transforms.Resize((size, size), Image.BICUBIC)])
     img = transform(img)
     img_np = np.array(img)
@@ -66,7 +95,7 @@ def _postprocess_output(L: torch.Tensor, ab_pred: torch.Tensor) -> np.ndarray:
 
 
 def colorize_image(
-    image_path: str,
+    image_path: Union[str, Image.Image],
     model_path: str,
     device: str = "cuda",
     output_path: Optional[str] = None,
@@ -79,11 +108,22 @@ def colorize_image(
         model = _load_model(model_path, device)
 
     target_device = next(model.parameters()).device
-    L_tensor, _ = _preprocess_image(image_path, size)
+    original = _open_image(image_path)
+    L_tensor, _ = _preprocess_image(original, size)
     L_tensor = L_tensor.to(target_device)
 
+    model.eval()
     with torch.no_grad():
         ab_pred = model.net_G(L_tensor)
+
+    if original.size != (size, size):
+        # The network works at size x size. Upsample the predicted colour to the
+        # original resolution and pair it with the full-resolution L channel so
+        # the output keeps the input's size and aspect ratio.
+        width, height = original.size
+        ab_pred = F.interpolate(ab_pred, size=(height, width), mode="bilinear", align_corners=False)
+        L_full = rgb2lab(np.array(original))[:, :, 0].astype("float32")
+        L_tensor = (torch.from_numpy(L_full) / 50.0 - 1.0)[None, None].to(ab_pred.device)
 
     rgb_array = _postprocess_output(L_tensor, ab_pred)
     rgb_uint8 = (np.clip(rgb_array, 0, 1) * 255).astype(np.uint8)

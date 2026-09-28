@@ -13,6 +13,8 @@ from skimage.metrics import peak_signal_noise_ratio, structural_similarity
 from torch import nn
 from tqdm import tqdm
 
+from image_colorizer.inference import _resolve_device
+
 
 def _lab_to_rgb_batch(L: torch.Tensor, ab: torch.Tensor) -> np.ndarray:
     L_denorm = (L + 1.0) * 50.0
@@ -30,7 +32,7 @@ def evaluate_model(
     val_dataloader: torch.utils.data.DataLoader,
     device: str = "cuda",
 ) -> Dict[str, float]:
-    device = torch.device(device if torch.cuda.is_available() or device == "cpu" else "cpu")
+    device = _resolve_device(device)
     model = model.to(device)
     model.net_G.eval()
 
@@ -87,7 +89,7 @@ def save_comparison_images(
     filename: str = "comparison.png",
 ) -> str:
     os.makedirs(output_dir, exist_ok=True)
-    device = torch.device(device if torch.cuda.is_available() or device == "cpu" else "cpu")
+    device = _resolve_device(device)
     model = model.to(device)
     model.net_G.eval()
     L = sample_batch["L"].to(device)

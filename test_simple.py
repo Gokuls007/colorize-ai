@@ -95,7 +95,7 @@ print("="*60)
 try:
     model.net_G.eval()
     with torch.no_grad():
-        dummy_input = torch.randn(1, 1, 256, 256)
+        dummy_input = torch.randn(1, 1, 256, 256).to(model.device)
         output = model.net_G(dummy_input)
     print(" Forward pass works!")
     print(f"   Input shape: {dummy_input.shape}")
@@ -129,8 +129,9 @@ try:
     print(f" Image loaded: {img.size}")
     
     # Convert to LAB
-    img_np = np.array(img).astype("float32")
-    img_lab = rgb2lab(img_np)
+    # Keep uint8: rgb2lab treats float input as [0, 1], so 0-255 floats give L >> 100
+    img_np = np.array(img)
+    img_lab = rgb2lab(img_np).astype("float32")
     print(f" Converted to LAB: {img_lab.shape}")
     
     # Extract L channel
@@ -151,7 +152,7 @@ try:
     from torchvision import transforms
     
     # Convert to tensor
-    L_tensor = torch.from_numpy(np.transpose(L_normalized, (2, 0, 1))).unsqueeze(0)
+    L_tensor = torch.from_numpy(np.transpose(L_normalized, (2, 0, 1))).unsqueeze(0).to(model.device)
     print(f" Tensor shape: {L_tensor.shape}")
     
     # Run inference

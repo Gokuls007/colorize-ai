@@ -20,7 +20,8 @@ uv.lock
 
 # Large files
 *.pth
-!checkpoint.pth
+# keep the trained weights the app loads by default
+!model_checkpoint.pth
 
 # Temporary files
 *.tmp

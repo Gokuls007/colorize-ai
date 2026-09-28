@@ -39,3 +39,9 @@ test_checkpoint.pth
 # OS
 .DS_Store
 Thumbs.db
+
+# Virtual environments and tool caches
+.venv/
+venv/
+.pytest_cache/
+.ruff_cache/

@@ -72,7 +72,7 @@ try:
     model.net_G.eval()
     with torch.no_grad():
         # Create test input
-        test_input = torch.randn(1, 1, 256, 256)
+        test_input = torch.randn(1, 1, 256, 256).to(next(model.net_G.parameters()).device)
         output = model.net_G(test_input)
     
     # Analyze output

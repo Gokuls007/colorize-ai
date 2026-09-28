@@ -16,6 +16,7 @@ dependencies = [
     "scikit-image>=0.25.2",
     "scikit-learn>=1.6.1",
     "setuptools>=80.0.0",
+    "streamlit>=1.50.0",
     "torch>=2.6.0",
     "torchaudio>=2.6.0",
     "torchsummary>=1.5.1",
@@ -23,3 +24,10 @@ dependencies = [
     "torchviz>=0.0.3",
     "tqdm>=4.67.1",
 ]
+
+[tool.setuptools]
+packages = ["image_colorizer", "image_colorizer.model"]
+
+[tool.pytest.ini_options]
+# test_simple.py and check_training.py are standalone diagnostic scripts
+python_files = ["smoke_test.py"]
