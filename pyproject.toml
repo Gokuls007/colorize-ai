@@ -31,3 +31,6 @@ packages = ["image_colorizer", "image_colorizer.model"]
 [tool.pytest.ini_options]
 # test_simple.py and check_training.py are standalone diagnostic scripts
 python_files = ["smoke_test.py"]
+markers = [
+    "model: needs the real model_checkpoint.pth (Git LFS)",
+]

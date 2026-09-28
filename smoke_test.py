@@ -2,6 +2,7 @@
 Smoke tests for the inference pipeline.
 
 Run with:  python -m pytest smoke_test.py
+Skip the test that needs the real checkpoint:  python -m pytest smoke_test.py -m "not model"
 """
 
 import os
@@ -61,8 +62,14 @@ def test_lfs_pointer_is_reported(tmp_path):
         _load_model(str(pointer), device="cpu")
 
 
-@pytest.mark.skipif(not HAS_WEIGHTS, reason="model_checkpoint.pth not downloaded")
+@pytest.mark.model
 def test_colorize_keeps_size_and_adds_color(tmp_path):
+    if not HAS_WEIGHTS:
+        # CI sets REQUIRE_MODEL=1 on the job that fetches the LFS checkpoint,
+        # so a failed download fails the build instead of silently skipping
+        if os.environ.get("REQUIRE_MODEL") == "1":
+            pytest.fail("model_checkpoint.pth is missing or an LFS pointer")
+        pytest.skip("model_checkpoint.pth not downloaded (run 'git lfs pull')")
     src = Image.open(SAMPLE_BW)
     assert src.mode == "L"
 

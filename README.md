@@ -1,5 +1,6 @@
 # 🎨 ImageColorization — Deep Learning Powered Photo Revitalization
 
+[![CI](https://github.com/Gokuls007/colorize-ai/actions/workflows/ci.yml/badge.svg)](https://github.com/Gokuls007/colorize-ai/actions/workflows/ci.yml)
 [![Python 3.10+](https://img.shields.io/badge/python-3.10+-blue.svg)](https://www.python.org/downloads/)
 [![PyTorch](https://img.shields.io/badge/PyTorch-EE4C2C?style=flat&logo=pytorch&logoColor=white)](https://pytorch.org/)
 [![Streamlit](https://img.shields.io/badge/Streamlit-FF4B4B?style=flat&logo=Streamlit&logoColor=white)](https://streamlit.io/)
@@ -8,6 +9,42 @@
 **ImageColorization** is a production-grade deep learning pipeline designed to breathe new life into black and white images. Using a state-of-the-art **Pix2Pix GAN architecture** (U-Net Generator + PatchGAN Discriminator) operating in the **CIE LAB color space**, it automatically predicts realistic chromaticity for grayscale inputs.
 
 > Rediscover history in vibrant color. Perfect for old family photos, historical archives, and creative film projects.
+
+---
+
+## ⚡ Quick Start
+
+All options need the trained weights. `model_checkpoint.pth` (~230 MB) is stored with Git LFS, so clone with Git LFS installed:
+
+```bash
+git lfs install
+git clone https://github.com/Gokuls007/colorize-ai.git
+cd colorize-ai
+```
+
+**Docker** (CPU only, no local Python needed):
+```bash
+docker build -t colorize-ai .
+docker run --rm -p 8501:8501 colorize-ai
+# then open http://localhost:8501
+```
+
+**Local Streamlit app:**
+```bash
+pip install -r requirements.txt
+python -m streamlit run streamlit_app.py
+```
+
+**Command line:**
+```bash
+# Single image (output keeps the input's size)
+python main.py --input photo.jpg --output photo_color.jpg
+
+# Every .jpg/.jpeg/.png in a folder
+python main.py --input ./old_photos --output ./restored --batch
+```
+
+`--model` defaults to `model_checkpoint.pth`. `--device` accepts `cuda`, `mps` or `cpu` and falls back to CPU if the requested device is not available.
 
 ---
 
@@ -92,10 +129,13 @@ python main.py --input ./old_photos --model model_checkpoint.pth --output ./rest
 
 | Parameter | Value |
 |-----------|-------|
-| **Backbone** | ResNet-style U-Net |
-| **Input Size** | 256 x 256 |
+| **Backbone** | Pix2Pix U-Net generator + PatchGAN discriminator |
+| **Model Resolution** | 256 x 256 (colour is upsampled back to the input size) |
 | **Dataset** | COCO Sample (2017) |
-| **Inference Time** | ~40ms (GPU) / ~300ms (CPU) |
+| **Included Checkpoint** | `model_checkpoint.pth`, epoch 6 |
+| **Inference Time (CPU)** | ~0.2 s for a 640x428 image, model already loaded (24-thread desktop CPU, PyTorch 2.14 CPU build); GPU not measured |
+
+**Accuracy metrics:** PSNR/SSIM have not been measured for the included checkpoint yet. The repository only contains grayscale inputs, with no colour ground truth to compare against. To measure them on a COCO validation split, run `python main.py --evaluate`. This downloads the COCO sample dataset.
 
 ---
 
